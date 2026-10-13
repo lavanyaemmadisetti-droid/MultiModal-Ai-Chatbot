@@ -1,0 +1,85 @@
+// Initialize environment variables first before importing routes or services
+import './config/env.js';
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import uploadRoutes from './routes/uploadRoutes.js';
+import apiRouter from './routes/index.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { isGeminiConfigured } from './config/gemini.js';
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+// Middleware configuration
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin) or any localhost/127.0.0.1
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin === CLIENT_URL) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'Range']
+  })
+);
+
+// Enable preflight for all routes
+app.options('*', cors());
+
+app.use(morgan('dev'));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎓 Multimodal AI StudyMate Backend API is running.',
+    docs: '/api/health',
+    geminiConfigured: isGeminiConfigured()
+  });
+});
+
+// Explicitly mount upload routes at /upload and /api/upload
+app.use('/upload', uploadRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Mount API router for all features (/chat, /summarize, /quiz, /health)
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Route ${req.method} ${req.originalUrl} not found.`
+  });
+});
+
+// Centralized error handling
+app.use(errorHandler);
+
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`\n==================================================`);
+  console.log(`🚀 Multimodal AI StudyMate Backend running at:`);
+  console.log(`   http://localhost:${PORT}`);
+  console.log(`   Health Check: http://localhost:${PORT}/api/health`);
+  console.log(`   Gemini Status: ${isGeminiConfigured() ? '✅ Configured' : '⚠️ Key not set (using demo mode)'}`);
+  console.log(`==================================================\n`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌ Error: Port ${PORT} is already in use by another process.`);
+    console.error(`   To resolve, close the running process or change PORT in backend/.env.\n`);
+  } else {
+    console.error('\n❌ Server error:', err.message);
+  }
+});
+
+export default app;

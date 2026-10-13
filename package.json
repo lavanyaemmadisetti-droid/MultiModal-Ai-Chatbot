@@ -1,0 +1,26 @@
+{
+  "name": "multimodal-ai-studymate",
+  "version": "1.0.0",
+  "description": "Multimodal AI StudyMate - A modern study companion powered by Google Gemini, React, Vite, Tailwind CSS, and Express",
+  "private": true,
+  "scripts": {
+    "install:all": "npm.cmd --prefix backend install && npm.cmd --prefix frontend install",
+    "dev:backend": "npm.cmd --prefix backend run dev",
+    "dev:frontend": "npm.cmd --prefix frontend run dev",
+    "build:frontend": "npm.cmd --prefix frontend run build",
+    "start:backend": "npm.cmd --prefix backend start"
+  },
+  "keywords": [
+    "gemini",
+    "multimodal",
+    "react",
+    "vite",
+    "tailwindcss",
+    "express",
+    "study-companion",
+    "quiz-generator",
+    "pdf-ai"
+  ],
+  "author": "",
+  "license": "MIT"
+}
