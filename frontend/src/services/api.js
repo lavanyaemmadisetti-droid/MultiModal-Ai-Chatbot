@@ -1,5 +1,10 @@
-const rawApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '/api';
+const rawApiBase = 
+  import.meta.env.VITE_API_BASE_URL || 
+  import.meta.env.VITE_API_URL || 
+  'https://multimodal-ai-chatbot-5hsv.onrender.com';
 const API_BASE = rawApiBase.replace(/\/+$/, '');
+
+console.info(`[StudyMate API] Connected to backend: ${API_BASE}`);
 
 /**
  * Handle HTTP response and standardized errors
