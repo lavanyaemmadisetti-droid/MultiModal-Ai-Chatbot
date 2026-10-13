@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:5001';
+  const backendUrl = env.VITE_BACKEND_URL || env.VITE_API_BASE_URL || 'https://multimodal-ai-chatbot-5hsv.onrender.com';
 
   return {
     plugins: [
