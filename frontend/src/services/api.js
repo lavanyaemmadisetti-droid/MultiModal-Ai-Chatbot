@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '/api';
+const API_BASE = rawApiBase.replace(/\/+$/, '');
 
 /**
  * Handle HTTP response and standardized errors
@@ -47,6 +48,20 @@ export const uploadFile = async (file) => {
   const res = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
     body: formData
+  });
+
+  return await handleResponse(res);
+};
+
+/**
+ * Register a file uploaded directly to Supabase Storage (Bypasses Vercel 4.5MB limit)
+ * @param {object} payload - { documentId, filename, mimetype, size, storagePath, publicUrl }
+ */
+export const registerSupabaseFile = async (payload) => {
+  const res = await fetch(`${API_BASE}/upload/supabase`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
 
   return await handleResponse(res);
@@ -177,6 +192,7 @@ export const getQuizResults = async (documentId) => {
 export default {
   checkHealth,
   uploadFile,
+  registerSupabaseFile,
   getSampleDocuments,
   getSavedDocuments,
   getDocument,

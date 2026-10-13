@@ -65,8 +65,62 @@ export const subscribeToDocuments = (onInsert) => {
   };
 };
 
+/**
+ * Sign in user with email & password
+ */
+export const signInWithEmail = async (email, password) => {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase client is not configured.');
+  return await client.auth.signInWithPassword({ email, password });
+};
+
+/**
+ * Sign up user with email & password
+ */
+export const signUpWithEmail = async (email, password) => {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase client is not configured.');
+  return await client.auth.signUp({ email, password });
+};
+
+/**
+ * Sign out current user
+ */
+export const signOut = async () => {
+  const client = getSupabase();
+  if (!client) return;
+  return await client.auth.signOut();
+};
+
+/**
+ * Get current session user
+ */
+export const getCurrentUser = async () => {
+  const client = getSupabase();
+  if (!client) return null;
+  const { data } = await client.auth.getUser();
+  return data?.user || null;
+};
+
+/**
+ * Listen to auth state changes
+ */
+export const onAuthStateChange = (callback) => {
+  const client = getSupabase();
+  if (!client) return () => {};
+  const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+    callback(session?.user || null);
+  });
+  return () => subscription?.unsubscribe();
+};
+
 export default {
   isSupabaseFrontendConfigured,
   getSupabase,
-  subscribeToDocuments
+  subscribeToDocuments,
+  signInWithEmail,
+  signUpWithEmail,
+  signOut,
+  getCurrentUser,
+  onAuthStateChange
 };

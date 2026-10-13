@@ -4,12 +4,14 @@ import {
   handleFileUpload,
   handleGetDocument,
   handleGetSampleDocuments,
-  handleGetSavedDocuments
+  handleGetSavedDocuments,
+  handleSupabaseUpload
 } from '../controllers/uploadController.js';
 
 const router = Router();
 
 router.post('/', upload.single('file'), handleFileUpload);
+router.post('/supabase', handleSupabaseUpload);
 router.get('/samples', handleGetSampleDocuments);
 router.get('/saved', handleGetSavedDocuments);
 router.get('/:id', handleGetDocument);
