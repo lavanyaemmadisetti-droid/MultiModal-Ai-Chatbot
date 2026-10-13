@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Variables (Keep API keys strictly secure)
+.env
+backend/.env
+frontend/.env
+*.env.local
+
+# Production Builds
+dist/
+frontend/dist/
+build/
+
+# Uploads & Temporary Cache
+uploads/
+backend/uploads/
+.cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+.system_generated/
