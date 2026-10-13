@@ -235,8 +235,78 @@ export const formatDocumentForGemini = (doc) => {
   throw new Error('Document content could not be formatted for Gemini processing.');
 };
 
+/**
+ * Process a file that was uploaded directly to Supabase Storage by the client
+ * (Bypasses Vercel Serverless Function 4.5MB request payload limit)
+ * @param {object} params - { documentId, filename, mimetype, size, storagePath, publicUrl }
+ * @returns {Promise<object>}
+ */
+export const processSupabaseStoredFile = async ({ documentId, filename, mimetype, size, storagePath, publicUrl }) => {
+  const docId = documentId || crypto.randomUUID();
+  let extractedText = '';
+  let pageCount = 1;
+  let base64Data = '';
+
+  // Download file buffer from Supabase to parse and prepare for Gemini
+  if (storagePath) {
+    try {
+      const fileBuffer = await downloadFileFromStorage(storagePath);
+      if (fileBuffer) {
+        base64Data = fileBuffer.toString('base64');
+        if (mimetype === 'application/pdf') {
+          try {
+            const pdfData = await pdfParse(fileBuffer);
+            extractedText = pdfData.text || '';
+            pageCount = pdfData.numpages || 1;
+          } catch (pdfErr) {
+            console.warn('PDF parsing fallback:', pdfErr.message);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not download file buffer from Supabase Storage:', err.message);
+    }
+  }
+
+  const wordCount = extractedText ? extractedText.trim().split(/\s+/).length : 0;
+  const textPreview = extractedText ? extractedText.slice(0, 500) + '...' : '';
+
+  const docMetadata = {
+    id: docId,
+    filename,
+    mimetype,
+    size: size || 0,
+    pageCount,
+    wordCount,
+    textPreview,
+    storagePath,
+    publicUrl,
+    uploadedAt: new Date().toISOString(),
+    isSample: false
+  };
+
+  // Persist metadata in Supabase DB if configured
+  if (isSupabaseConfigured()) {
+    try {
+      await saveDocumentRecord(docMetadata);
+    } catch (err) {
+      console.warn('Supabase document record save error:', err.message);
+    }
+  }
+
+  // Cache in-memory
+  documentStore.set(docId, {
+    ...docMetadata,
+    base64Data,
+    extractedText
+  });
+
+  return docMetadata;
+};
+
 export default {
   processUploadedFile,
+  processSupabaseStoredFile,
   getDocumentById,
   ensureDocumentLoaded,
   getSampleDocuments,

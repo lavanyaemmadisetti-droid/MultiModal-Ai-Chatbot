@@ -84,9 +84,40 @@ export const handleGetSavedDocuments = async (req, res, next) => {
   }
 };
 
+export const handleSupabaseUpload = async (req, res, next) => {
+  try {
+    const { documentId, filename, mimetype, size, storagePath, publicUrl } = req.body;
+    if (!storagePath || !filename) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing storagePath or filename.'
+      });
+    }
+
+    const { processSupabaseStoredFile } = await import('../services/fileService.js');
+    const docMetadata = await processSupabaseStoredFile({
+      documentId,
+      filename,
+      mimetype,
+      size,
+      storagePath,
+      publicUrl
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Supabase document processed successfully.',
+      document: docMetadata
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   handleFileUpload,
   handleGetDocument,
   handleGetSampleDocuments,
-  handleGetSavedDocuments
+  handleGetSavedDocuments,
+  handleSupabaseUpload
 };
