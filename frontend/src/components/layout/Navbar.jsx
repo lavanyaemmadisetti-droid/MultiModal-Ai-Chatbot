@@ -1,9 +1,9 @@
 import React from 'react';
-import { Sparkles, Cpu, KeyRound, Info, Database } from 'lucide-react';
+import { Sparkles, Cpu, KeyRound, Info, Database, User, LogOut } from 'lucide-react';
 import { useStudy } from '../../context/StudyContext';
 
-export const Navbar = ({ onOpenKeyInfo }) => {
-  const { backendStatus } = useStudy();
+export const Navbar = ({ onOpenKeyInfo, onOpenAuth }) => {
+  const { backendStatus, user, handleSignOut } = useStudy();
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -66,6 +66,32 @@ export const Navbar = ({ onOpenKeyInfo }) => {
             <span>{backendStatus.geminiConfigured ? 'Gemini Active' : 'Demo Mode (Add Key)'}</span>
             <KeyRound className="w-3.5 h-3.5 ml-0.5 opacity-70" />
           </button>
+
+          {/* User Auth Button */}
+          {user ? (
+            <div className="flex items-center space-x-2 pl-1 border-l border-slate-200">
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-700">
+                <User className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="max-w-[100px] sm:max-w-[140px] truncate">{user.email?.split('@')[0]}</span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition shadow-xs"
+              title="Student Sign In / Sign Up"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
 
           {/* Setup / Docs button */}
           <button

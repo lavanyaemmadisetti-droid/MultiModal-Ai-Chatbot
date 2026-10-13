@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { StudyProvider, useStudy } from './context/StudyContext';
 import Navbar from './components/layout/Navbar';
 import FileUploadZone from './components/upload/FileUploadZone';
@@ -7,23 +8,45 @@ import SummaryView from './components/summary/SummaryView';
 import QuizGenerator from './components/quiz/QuizGenerator';
 import FlashcardDeck from './components/quiz/FlashcardDeck';
 import ConfigModal from './components/common/ConfigModal';
+import AuthModal from './components/common/AuthModal';
 import { MessageSquare, BookOpen, Award, Layers, Sparkles, Shield, ExternalLink } from 'lucide-react';
 
 const MainContent = () => {
-  const { activeTab, setActiveTab } = useStudy();
+  const { activeTab, setActiveTab, setUser } = useStudy();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const TABS = [
-    { id: 'chat', label: 'Multimodal Q&A', icon: MessageSquare, badge: 'Interactive' },
-    { id: 'summary', label: 'Smart Summarizer', icon: BookOpen, badge: '4 Styles' },
-    { id: 'quiz', label: 'Quiz Generator', icon: Award, badge: 'MCQs & Scores' },
-    { id: 'flashcards', label: 'Flashcards', icon: Layers, badge: 'Active Recall' }
+    { id: 'chat', label: 'Multimodal Q&A', icon: MessageSquare, badge: 'Interactive', path: '/' },
+    { id: 'summary', label: 'Smart Summarizer', icon: BookOpen, badge: '4 Styles', path: '/summary' },
+    { id: 'quiz', label: 'Quiz Generator', icon: Award, badge: 'MCQs & Scores', path: '/quiz' },
+    { id: 'flashcards', label: 'Flashcards', icon: Layers, badge: 'Active Recall', path: '/flashcards' }
   ];
+
+  // Sync route with activeTab
+  useEffect(() => {
+    const rawPath = location.pathname.replace(/^\//, '');
+    if (['chat', 'summary', 'quiz', 'flashcards'].includes(rawPath)) {
+      setActiveTab(rawPath);
+    } else if (rawPath === '') {
+      setActiveTab('chat');
+    }
+  }, [location.pathname, setActiveTab]);
+
+  const handleTabSelect = (tab) => {
+    setActiveTab(tab.id);
+    navigate(tab.path);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 selection:bg-indigo-100 selection:text-indigo-900">
       {/* Navigation Header */}
-      <Navbar onOpenKeyInfo={() => setIsConfigOpen(true)} />
+      <Navbar
+        onOpenKeyInfo={() => setIsConfigOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
+      />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -68,7 +91,7 @@ const MainContent = () => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabSelect(tab)}
                   className={`group relative flex items-center space-x-2 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                     isActive
                       ? 'bg-white text-indigo-700 border border-slate-200 shadow-xs'
@@ -101,12 +124,16 @@ const MainContent = () => {
           </nav>
         </div>
 
-        {/* Active Tab Panel */}
+        {/* Active Tab Panel with React Router */}
         <section className="transition-all duration-200">
-          {activeTab === 'chat' && <ChatInterface />}
-          {activeTab === 'summary' && <SummaryView />}
-          {activeTab === 'quiz' && <QuizGenerator />}
-          {activeTab === 'flashcards' && <FlashcardDeck />}
+          <Routes>
+            <Route path="/" element={<ChatInterface />} />
+            <Route path="/chat" element={<ChatInterface />} />
+            <Route path="/summary" element={<SummaryView />} />
+            <Route path="/quiz" element={<QuizGenerator />} />
+            <Route path="/flashcards" element={<FlashcardDeck />} />
+            <Route path="*" element={<ChatInterface />} />
+          </Routes>
         </section>
       </main>
 
@@ -116,7 +143,7 @@ const MainContent = () => {
           <div className="flex items-center space-x-2">
             <span className="font-bold text-slate-800">Multimodal AI StudyMate</span>
             <span>•</span>
-            <span>React + Vite + Node.js + Express + Google Gemini</span>
+            <span>React + Vite + Node.js + Express + Google Gemini + Supabase</span>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -141,16 +168,23 @@ const MainContent = () => {
         </div>
       </footer>
 
-      {/* Configuration Modal */}
+      {/* Configuration & Auth Modals */}
       <ConfigModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} />
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onAuthSuccess={(u) => setUser(u)}
+      />
     </div>
   );
 };
 
 export default function App() {
   return (
-    <StudyProvider>
-      <MainContent />
-    </StudyProvider>
+    <BrowserRouter>
+      <StudyProvider>
+        <MainContent />
+      </StudyProvider>
+    </BrowserRouter>
   );
 }

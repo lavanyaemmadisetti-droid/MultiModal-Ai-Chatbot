@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, FileText, Image as ImageIcon, AlertCircle, RefreshCw, X } from 'lucide-react';
 import { useStudy } from '../../context/StudyContext';
+import { isSupabaseFrontendConfigured } from '../../services/supabase';
 
 export const FileUploadZone = () => {
   const { activeDocument, handleUpload, loadSampleDoc, recentDocuments, isUploading, error, setError } = useStudy();
@@ -39,6 +40,11 @@ export const FileUploadZone = () => {
 
     if (file.size > 25 * 1024 * 1024) {
       setError('File size exceeds the 25 MB limit.');
+      return;
+    }
+
+    if (file.size > 4.5 * 1024 * 1024 && !isSupabaseFrontendConfigured()) {
+      setError(`File size is ${(file.size / (1024 * 1024)).toFixed(1)} MB. Vercel serverless functions have a 4.5 MB request limit. Please configure Supabase in frontend/.env to enable direct large file uploads up to 25 MB, or select a file under 4.5 MB.`);
       return;
     }
 
